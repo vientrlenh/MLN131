@@ -1,0 +1,245 @@
+.detail-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f7f7f4;
+  color: #1f2933;
+}
+
+.detail-topbar {
+  align-items: center;
+  background: #ffffff;
+  border-bottom: 1px solid #deded7;
+  display: flex;
+  gap: 16px;
+  padding: 16px clamp(20px, 5vw, 56px);
+  flex-shrink: 0;
+}
+
+.back-button {
+  align-items: center;
+  background: #eef2f6;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  color: #344054;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  height: 36px;
+  justify-content: center;
+  padding: 0 12px;
+  text-decoration: none;
+}
+
+.back-button:hover {
+  border-color: #2f6f6d;
+  color: #2f6f6d;
+}
+
+.detail-topbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-detail-content {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 20px 0;
+}
+
+.post-detail-header {
+  margin-bottom: 20px;
+}
+
+.post-detail-header h1 {
+  font-size: 28px;
+  line-height: 1.25;
+  color: #111827;
+  margin: 0 0 12px;
+}
+
+.post-detail-meta {
+  color: #667085;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13px;
+  gap: 10px;
+}
+
+.post-detail-text {
+  color: #4b5563;
+  font-size: 16px;
+  line-height: 1.65;
+  margin: 0 0 24px;
+  white-space: pre-wrap;
+}
+
+.comments-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.comments-header {
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  padding-top: 16px;
+  border-top: 1px solid #deded7;
+}
+
+.comments-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.comment-card {
+  background: #ffffff;
+  border: 1px solid #deded7;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.comment-meta {
+  color: #667085;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13px;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.comment-author {
+  color: #16324f;
+  font-weight: 700;
+}
+
+.comment-body {
+  color: #344054;
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.comments-empty {
+  color: #667085;
+  font-size: 14px;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.comment-input-bar {
+  background: #ffffff;
+  border-top: 1px solid #deded7;
+  padding: 12px clamp(20px, 5vw, 56px);
+  flex-shrink: 0;
+}
+
+.comment-input-inner {
+  display: flex;
+  gap: 10px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.comment-input-inner textarea {
+  border: 1px solid #c9c9c3;
+  border-radius: 6px;
+  color: #111827;
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  min-height: 40px;
+  max-height: 120px;
+  padding: 10px 12px;
+  resize: none;
+}
+
+.comment-input-inner textarea:focus {
+  border-color: #16324f;
+  outline: 3px solid rgba(22, 50, 79, 0.14);
+}
+
+.comment-send-btn {
+  align-items: center;
+  background: #2f6f6d;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  height: 40px;
+  justify-content: center;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.comment-send-btn:disabled {
+  background: #98a2b3;
+  cursor: not-allowed;
+}
+
+.comment-form-error {
+  color: #b42318;
+  font-size: 13px;
+  margin: 6px 0 0;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.detail-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: #667085;
+  font-size: 16px;
+}
+
+.detail-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: #b42318;
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .detail-topbar-title {
+    font-size: 15px;
+  }
+
+  .post-detail-header h1 {
+    font-size: 22px;
+  }
+}

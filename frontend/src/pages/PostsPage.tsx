@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import './PostsPage.css'
 
 const USER_STORAGE_KEY = 'mini-forum-user'
@@ -203,7 +204,7 @@ export function PostsPage() {
                 aria-label={`Upvote ${post.title}`}
                 className={post.currentUserVote === 1 ? 'is-selected' : undefined}
                 disabled={!currentUser || votePostMutation.isPending}
-                onClick={() => votePostMutation.mutate({ postId: post._id, value: 1 })}
+                onClick={(e) => { e.stopPropagation(); votePostMutation.mutate({ postId: post._id, value: 1 }) }}
                 aria-pressed={post.currentUserVote === 1}
                 type="button"
               >
@@ -215,23 +216,25 @@ export function PostsPage() {
                 aria-label={`Downvote ${post.title}`}
                 className={post.currentUserVote === -1 ? 'is-selected' : undefined}
                 disabled={!currentUser || votePostMutation.isPending}
-                onClick={() => votePostMutation.mutate({ postId: post._id, value: -1 })}
+                onClick={(e) => { e.stopPropagation(); votePostMutation.mutate({ postId: post._id, value: -1 }) }}
                 aria-pressed={post.currentUserVote === -1}
                 type="button"
               >
                 -
               </button>
             </div>
-            <div className="post-content">
-              <div className="post-meta">
-                <span>Đăng bởi {post.authorNickname}</span>
-                <span>{new Date(post.createdAt).toLocaleString()}</span>
-                <span>{post.votes.upvotes} lên</span>
-                <span>{post.votes.downvotes} xuống</span>
+            <Link to={`/posts/${post._id}`} className="post-content-link">
+              <div className="post-content">
+                <div className="post-meta">
+                  <span>Đăng bởi {post.authorNickname}</span>
+                  <span>{new Date(post.createdAt).toLocaleString()}</span>
+                  <span>{post.votes.upvotes} lên</span>
+                  <span>{post.votes.downvotes} xuống</span>
+                </div>
+                <h2>{post.title}</h2>
+                <p>{post.body}</p>
               </div>
-              <h2>{post.title}</h2>
-              <p>{post.body}</p>
-            </div>
+            </Link>
           </article>
         ))}
       </section>

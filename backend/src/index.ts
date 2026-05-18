@@ -2,7 +2,7 @@ import express from "express";
 import { ObjectId } from "mongodb";
 import connect from "./db";
 import { createModelIndexes } from "./models";
-import { createPost, createUser, getUserByNickname, listPostsWithVotes, upsertVote } from "./services";
+import { createPost, createUser, getUserByNickname, listPostsWithVotes, upsertVote, getPostDetails, getCommentsOnPost, createComment, getVotesOnPost, getUserVoteOnPost } from "./services";
 
 
 const app = express();
@@ -113,6 +113,76 @@ app.post("/api/posts/:postId/votes", async (req, res) => {
     });
 
     res.status(204).send();
+});
+
+app.get("/api/posts/:postId", async (req, res) => {
+    const postId = String(req.params.postId ?? "").trim();
+    const viewerUserId = String(req.query.userId ?? "").trim();
+
+    if (!ObjectId.isValid(postId)) {
+        res.status(400).send({ message: "Bài đăng không hợp lệ" });
+        return;
+    }
+
+    const post = await getPostDetails(postId);
+    if (!post) {
+        res.status(404).send({ message: "Không tìm thấy bài đăng" });
+        return;
+    }
+
+    const votes = await getVotesOnPost(postId);
+    const currentUserVote = ObjectId.isValid(viewerUserId)
+        ? await getUserVoteOnPost(postId, viewerUserId)
+        : null;
+
+    res.send({ ...post, votes, currentUserVote });
+});
+
+app.get("/api/posts/:postId/comments", async (req, res) => {
+    const postId = String(req.params.postId ?? "").trim();
+
+    if (!ObjectId.isValid(postId)) {
+        res.status(400).send({ message: "Bài đăng không hợp lệ" });
+        return;
+    }
+
+    const comments = await getCommentsOnPost(postId);
+    res.send(comments);
+});
+
+app.post("/api/posts/:postId/comments", async (req, res) => {
+    const postId = String(req.params.postId ?? "").trim();
+    const authorId = String(req.body?.authorId ?? "").trim();
+    const body = String(req.body?.body ?? "").trim();
+
+    if (!ObjectId.isValid(postId)) {
+        res.status(400).send({ message: "Bài đăng không hợp lệ" });
+        return;
+    }
+
+    if (!ObjectId.isValid(authorId)) {
+        res.status(400).send({ message: "Tác giả hợp lệ là bắt buộc" });
+        return;
+    }
+
+    if (!body) {
+        res.status(400).send({ message: "Nội dung bình luận là bắt buộc" });
+        return;
+    }
+
+    if (body.length > 2000) {
+        res.status(400).send({ message: "Bình luận không được vượt quá 2000 ký tự" });
+        return;
+    }
+
+    const commentId = await createComment({
+        postId: new ObjectId(postId),
+        authorId: new ObjectId(authorId),
+        parentCommentId: null,
+        body,
+    });
+
+    res.status(201).send({ id: commentId });
 });
 
 async function startServer() {
