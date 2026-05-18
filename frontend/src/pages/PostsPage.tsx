@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useWebSocket, type WSEvent } from '../hooks/useWebSocket'
+import { API_URL } from '../config'
 import './PostsPage.css'
 
 const USER_STORAGE_KEY = 'mini-forum-user'
@@ -34,7 +35,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const storedUser = localStorage.getItem(USER_STORAGE_KEY)
   const user = storedUser ? (JSON.parse(storedUser) as StoredUser) : null
 
-  const response = await fetch(path, {
+  const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { WS_URL } from '../config'
 
 export type WSEventType = 'new_post' | 'new_comment' | 'new_vote'
 
@@ -7,13 +8,19 @@ export interface WSEvent {
   payload: Record<string, unknown>
 }
 
+function getWsUrl(): string {
+  if (WS_URL) return WS_URL
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${window.location.host}/ws`
+}
+
 export function useWebSocket(onEvent: (event: WSEvent) => void) {
   const onEventRef = useRef(onEvent)
   onEventRef.current = onEvent
 
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`)
+    const url = getWsUrl()
+    const ws = new WebSocket(url)
 
     ws.onmessage = (msg) => {
       try {
@@ -27,7 +34,7 @@ export function useWebSocket(onEvent: (event: WSEvent) => void) {
     ws.onclose = () => {
       // reconnect after 2s
       setTimeout(() => {
-        const ws2 = new WebSocket(`${protocol}//${window.location.host}/ws`)
+        const ws2 = new WebSocket(url)
         ws2.onmessage = ws.onmessage
         ws2.onclose = ws.onclose
       }, 2000)
