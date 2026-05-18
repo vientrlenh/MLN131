@@ -138,7 +138,7 @@ export function PostDetailPage() {
   })
 
   const votePostMutation = useMutation({
-    mutationFn: (value: 1 | -1) => {
+    mutationFn: (value: 1 | -1 | 0) => {
       if (!currentUser) {
         throw new Error('Hãy tạo biệt danh trước khi vote')
       }
@@ -247,7 +247,7 @@ export function PostDetailPage() {
               aria-label="Upvote"
               className={post.currentUserVote === 1 ? 'is-selected' : undefined}
               disabled={!currentUser || votePostMutation.isPending}
-              onClick={() => votePostMutation.mutate(1)}
+              onClick={() => votePostMutation.mutate(post.currentUserVote === 1 ? 0 : 1)}
               aria-pressed={post.currentUserVote === 1}
               type="button"
             >
@@ -258,7 +258,7 @@ export function PostDetailPage() {
               aria-label="Downvote"
               className={post.currentUserVote === -1 ? 'is-selected' : undefined}
               disabled={!currentUser || votePostMutation.isPending}
-              onClick={() => votePostMutation.mutate(-1)}
+              onClick={() => votePostMutation.mutate(post.currentUserVote === -1 ? 0 : -1)}
               aria-pressed={post.currentUserVote === -1}
               type="button"
             >

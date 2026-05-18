@@ -120,7 +120,7 @@ export function PostsPage() {
   })
 
   const votePostMutation = useMutation({
-    mutationFn: (vote: { postId: string; value: 1 | -1 }) => {
+    mutationFn: (vote: { postId: string; value: 1 | -1 | 0 }) => {
       if (!currentUser) {
         throw new Error('Hãy tạo biệt danh trước khi vote')
       }
@@ -212,7 +212,7 @@ export function PostsPage() {
                 aria-label={`Upvote ${post.title}`}
                 className={post.currentUserVote === 1 ? 'is-selected' : undefined}
                 disabled={!currentUser || votePostMutation.isPending}
-                onClick={(e) => { e.stopPropagation(); votePostMutation.mutate({ postId: post._id, value: 1 }) }}
+                onClick={(e) => { e.stopPropagation(); votePostMutation.mutate({ postId: post._id, value: post.currentUserVote === 1 ? 0 : 1 }) }}
                 aria-pressed={post.currentUserVote === 1}
                 type="button"
               >
@@ -224,7 +224,7 @@ export function PostsPage() {
                 aria-label={`Downvote ${post.title}`}
                 className={post.currentUserVote === -1 ? 'is-selected' : undefined}
                 disabled={!currentUser || votePostMutation.isPending}
-                onClick={(e) => { e.stopPropagation(); votePostMutation.mutate({ postId: post._id, value: -1 }) }}
+                onClick={(e) => { e.stopPropagation(); votePostMutation.mutate({ postId: post._id, value: post.currentUserVote === -1 ? 0 : -1 }) }}
                 aria-pressed={post.currentUserVote === -1}
                 type="button"
               >

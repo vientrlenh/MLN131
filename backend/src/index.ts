@@ -5,7 +5,7 @@ import { createServer } from "http";
 import { ObjectId } from "mongodb";
 import connect from "./db";
 import { createModelIndexes } from "./models";
-import { createPost, createUser, getUserByNickname, listPostsWithVotes, upsertVote, getPostDetails, getCommentsOnPost, createComment, getVotesOnPost, getUserVoteOnPost } from "./services";
+import { createPost, createUser, getUserByNickname, listPostsWithVotes, upsertVote, removeVote, getPostDetails, getCommentsOnPost, createComment, getVotesOnPost, getUserVoteOnPost } from "./services";
 import { usersCollection } from "./models";
 import { initWebSocket, broadcast } from "./ws";
 
@@ -109,17 +109,21 @@ app.post("/api/posts/:postId/votes", async (req, res) => {
         return;
     }
 
-    if (value !== 1 && value !== -1) {
-        res.status(400).send({ message: "Giá trị bình chọn phải là 1 hoặc -1" });
+    if (value !== 1 && value !== -1 && value !== 0) {
+        res.status(400).send({ message: "Giá trị bình chọn phải là 1, -1 hoặc 0" });
         return;
     }
 
-    await upsertVote({
-        userId: new ObjectId(userId),
-        targetType: "post",
-        targetId: new ObjectId(postId),
-        value,
-    });
+    if (value === 0) {
+        await removeVote(new ObjectId(userId), "post", new ObjectId(postId));
+    } else {
+        await upsertVote({
+            userId: new ObjectId(userId),
+            targetType: "post",
+            targetId: new ObjectId(postId),
+            value,
+        });
+    }
 
     broadcast({ type: "new_vote", payload: { postId, userId } });
     res.status(204).send();
