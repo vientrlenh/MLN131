@@ -36,6 +36,44 @@ interface Comment {
   createdAt: string
 }
 
+interface CommentGroup {
+  authorId: string
+  authorNickname: string
+  messages: { id: string; body: string; createdAt: string }[]
+  firstCreatedAt: string
+}
+
+const GROUP_THRESHOLD_MS = 10_000
+
+function groupComments(comments: Comment[]): CommentGroup[] {
+  if (comments.length === 0) return []
+
+  const groups: CommentGroup[] = []
+  let current: CommentGroup | null = null
+
+  for (const comment of comments) {
+    const commentTime = new Date(comment.createdAt).getTime()
+
+    if (
+      current &&
+      current.authorId === comment.authorId &&
+      commentTime - new Date(current.messages[current.messages.length - 1].createdAt).getTime() <= GROUP_THRESHOLD_MS
+    ) {
+      current.messages.push({ id: comment._id, body: comment.body, createdAt: comment.createdAt })
+    } else {
+      current = {
+        authorId: comment.authorId,
+        authorNickname: comment.authorNickname,
+        messages: [{ id: comment._id, body: comment.body, createdAt: comment.createdAt }],
+        firstCreatedAt: comment.createdAt,
+      }
+      groups.push(current)
+    }
+  }
+
+  return groups
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const storedUser = localStorage.getItem(USER_STORAGE_KEY)
   const user = storedUser ? (JSON.parse(storedUser) as StoredUser) : null
@@ -88,6 +126,25 @@ export function PostDetailPage() {
     enabled: !!postId,
   })
 
+  const votePostMutation = useMutation({
+    mutationFn: (value: 1 | -1) => {
+      if (!currentUser) {
+        throw new Error('Hãy tạo biệt danh trước khi vote')
+      }
+      return request<void>(`/api/posts/${postId}/votes`, {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: currentUser.id,
+          value,
+        }),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['post', postId] })
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+    },
+  })
+
   const createCommentMutation = useMutation({
     mutationFn: (body: string) => {
       if (!currentUser) {
@@ -108,6 +165,7 @@ export function PostDetailPage() {
   })
 
   const comments = commentsQuery.data ?? []
+  const commentGroups = groupComments(comments)
   const trimmedComment = commentText.trim()
 
   useEffect(() => {
@@ -116,7 +174,7 @@ export function PostDetailPage() {
     }
   }, [comments.length])
 
-  const handleSubmitComment = (e: React.FormEvent) => {
+  const handleSubmitComment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!trimmedComment) return
     createCommentMutation.mutate(trimmedComment)
@@ -158,6 +216,9 @@ export function PostDetailPage() {
           Quay lại
         </Link>
         <p className="detail-topbar-title">{post.title}</p>
+        <div className="user-chip" aria-label="Current nickname">
+          <span>{currentUser?.nickname ?? 'Guest'}</span>
+        </div>
       </header>
 
       <div className="detail-body">
@@ -167,12 +228,32 @@ export function PostDetailPage() {
             <div className="post-detail-meta">
               <span>Đăng bởi {post.authorNickname}</span>
               <span>{new Date(post.createdAt).toLocaleString()}</span>
-              <span>{post.votes.upvotes} lên</span>
-              <span>{post.votes.downvotes} xuống</span>
-              <span>Score: {post.votes.score}</span>
             </div>
           </div>
           <p className="post-detail-text">{post.body}</p>
+          <div className="post-vote-bar" aria-label={`Score ${post.votes.score}`}>
+            <button
+              aria-label="Upvote"
+              className={post.currentUserVote === 1 ? 'is-selected' : undefined}
+              disabled={!currentUser || votePostMutation.isPending}
+              onClick={() => votePostMutation.mutate(1)}
+              aria-pressed={post.currentUserVote === 1}
+              type="button"
+            >
+              +
+            </button>
+            <span className="post-vote-score">{post.votes.score}</span>
+            <button
+              aria-label="Downvote"
+              className={post.currentUserVote === -1 ? 'is-selected' : undefined}
+              disabled={!currentUser || votePostMutation.isPending}
+              onClick={() => votePostMutation.mutate(-1)}
+              aria-pressed={post.currentUserVote === -1}
+              type="button"
+            >
+              -
+            </button>
+          </div>
         </div>
 
         <section className="comments-section">
@@ -185,17 +266,21 @@ export function PostDetailPage() {
               <p className="comments-empty">Đang tải bình luận...</p>
             )}
 
-            {!commentsQuery.isLoading && comments.length === 0 && (
+            {!commentsQuery.isLoading && commentGroups.length === 0 && (
               <p className="comments-empty">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
             )}
 
-            {comments.map((comment) => (
-              <article className="comment-card" key={comment._id}>
-                <div className="comment-meta">
-                  <span className="comment-author">{comment.authorNickname}</span>
-                  <span>{new Date(comment.createdAt).toLocaleString()}</span>
+            {commentGroups.map((group) => (
+              <article className="comment-group" key={`${group.authorId}-${group.firstCreatedAt}`}>
+                <div className="comment-group-header">
+                  <span className="comment-author">{group.authorNickname}</span>
+                  <span className="comment-time">{new Date(group.firstCreatedAt).toLocaleString()}</span>
                 </div>
-                <p className="comment-body">{comment.body}</p>
+                <div className="comment-messages">
+                  {group.messages.map((msg) => (
+                    <p className="comment-bubble" key={msg.id}>{msg.body}</p>
+                  ))}
+                </div>
               </article>
             ))}
             <div ref={commentsEndRef} />

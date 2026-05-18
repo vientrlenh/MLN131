@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import connect from "./db";
 import { createModelIndexes } from "./models";
 import { createPost, createUser, getUserByNickname, listPostsWithVotes, upsertVote, getPostDetails, getCommentsOnPost, createComment, getVotesOnPost, getUserVoteOnPost } from "./services";
+import { usersCollection } from "./models";
 
 
 const app = express();
@@ -135,7 +136,10 @@ app.get("/api/posts/:postId", async (req, res) => {
         ? await getUserVoteOnPost(postId, viewerUserId)
         : null;
 
-    res.send({ ...post, votes, currentUserVote });
+    const author = await usersCollection().findOne({ _id: post.authorId });
+    const authorNickname = author?.nickname ?? "Unknown";
+
+    res.send({ ...post, authorNickname, votes, currentUserVote });
 });
 
 app.get("/api/posts/:postId/comments", async (req, res) => {
