@@ -1,6 +1,9 @@
 import type { ComponentProps } from 'react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import { useWebSocket, type WSEvent } from '../hooks/useWebSocket'
+import { API_URL } from '../config'
 import './PostsPage.css'
 
 const USER_STORAGE_KEY = 'mini-forum-user'
@@ -32,7 +35,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const storedUser = localStorage.getItem(USER_STORAGE_KEY)
   const user = storedUser ? (JSON.parse(storedUser) as StoredUser) : null
 
-  const response = await fetch(path, {
+  const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -61,6 +64,12 @@ function getStoredUser() {
 export function PostsPage() {
   const queryClient = useQueryClient()
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(() => getStoredUser())
+
+  useWebSocket(useCallback((event: WSEvent) => {
+    if (event.type === 'new_post' || event.type === 'new_vote') {
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+    }
+  }, [queryClient]))
   const [nickname, setNickname] = useState('')
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false)
   const [postTitle, setPostTitle] = useState('')
@@ -111,7 +120,7 @@ export function PostsPage() {
   })
 
   const votePostMutation = useMutation({
-    mutationFn: (vote: { postId: string; value: 1 | -1 }) => {
+    mutationFn: (vote: { postId: string; value: 1 | -1 | 0 }) => {
       if (!currentUser) {
         throw new Error('Hãy tạo biệt danh trước khi vote')
       }
@@ -203,7 +212,7 @@ export function PostsPage() {
                 aria-label={`Upvote ${post.title}`}
                 className={post.currentUserVote === 1 ? 'is-selected' : undefined}
                 disabled={!currentUser || votePostMutation.isPending}
-                onClick={() => votePostMutation.mutate({ postId: post._id, value: 1 })}
+                onClick={(e) => { e.stopPropagation(); votePostMutation.mutate({ postId: post._id, value: post.currentUserVote === 1 ? 0 : 1 }) }}
                 aria-pressed={post.currentUserVote === 1}
                 type="button"
               >
@@ -215,23 +224,25 @@ export function PostsPage() {
                 aria-label={`Downvote ${post.title}`}
                 className={post.currentUserVote === -1 ? 'is-selected' : undefined}
                 disabled={!currentUser || votePostMutation.isPending}
-                onClick={() => votePostMutation.mutate({ postId: post._id, value: -1 })}
+                onClick={(e) => { e.stopPropagation(); votePostMutation.mutate({ postId: post._id, value: post.currentUserVote === -1 ? 0 : -1 }) }}
                 aria-pressed={post.currentUserVote === -1}
                 type="button"
               >
                 -
               </button>
             </div>
-            <div className="post-content">
-              <div className="post-meta">
-                <span>Đăng bởi {post.authorNickname}</span>
-                <span>{new Date(post.createdAt).toLocaleString()}</span>
-                <span>{post.votes.upvotes} lên</span>
-                <span>{post.votes.downvotes} xuống</span>
+            <Link to={`/posts/${post._id}`} className="post-content-link">
+              <div className="post-content">
+                <div className="post-meta">
+                  <span>Đăng bởi {post.authorNickname}</span>
+                  <span>{new Date(post.createdAt).toLocaleString()}</span>
+                  <span>{post.votes.upvotes} lên</span>
+                  <span>{post.votes.downvotes} xuống</span>
+                </div>
+                <h2>{post.title}</h2>
+                <p>{post.body}</p>
               </div>
-              <h2>{post.title}</h2>
-              <p>{post.body}</p>
-            </div>
+            </Link>
           </article>
         ))}
       </section>

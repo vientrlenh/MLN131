@@ -144,6 +144,17 @@
   margin-bottom: 10px;
 }
 
+.post-content-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
+}
+
+.post-content-link:hover {
+  background: #f9fafb;
+}
+
 .post-content {
   padding: 20px 22px;
   text-align: left;

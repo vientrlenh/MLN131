@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { VoteDocument, votesCollection } from "../models";
+import { VoteDocument, VoteTargetType, votesCollection } from "../models";
 
 export interface VoteSummary {
   upvotes: number;
@@ -97,4 +97,12 @@ export async function upsertVote(vote: Omit<VoteDocument, "_id" | "createdAt" | 
     },
     { upsert: true },
   );
+}
+
+export async function removeVote(userId: ObjectId, targetType: VoteTargetType, targetId: ObjectId) {
+  await votesCollection().deleteOne({
+    userId,
+    targetType,
+    targetId,
+  });
 }
