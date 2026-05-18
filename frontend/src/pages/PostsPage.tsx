@@ -1,7 +1,8 @@
 import type { ComponentProps } from 'react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useWebSocket, type WSEvent } from '../hooks/useWebSocket'
 import './PostsPage.css'
 
 const USER_STORAGE_KEY = 'mini-forum-user'
@@ -62,6 +63,12 @@ function getStoredUser() {
 export function PostsPage() {
   const queryClient = useQueryClient()
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(() => getStoredUser())
+
+  useWebSocket(useCallback((event: WSEvent) => {
+    if (event.type === 'new_post' || event.type === 'new_vote') {
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+    }
+  }, [queryClient]))
   const [nickname, setNickname] = useState('')
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false)
   const [postTitle, setPostTitle] = useState('')

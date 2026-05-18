@@ -1,12 +1,15 @@
 import express from "express";
+import { createServer } from "http";
 import { ObjectId } from "mongodb";
 import connect from "./db";
 import { createModelIndexes } from "./models";
 import { createPost, createUser, getUserByNickname, listPostsWithVotes, upsertVote, getPostDetails, getCommentsOnPost, createComment, getVotesOnPost, getUserVoteOnPost } from "./services";
 import { usersCollection } from "./models";
+import { initWebSocket, broadcast } from "./ws";
 
 
 const app = express();
+const server = createServer(app);
 const PORT = 3000;
 
 app.use(express.json());
@@ -83,6 +86,7 @@ app.post("/api/posts", async (req, res) => {
         body,
     });
 
+    broadcast({ type: "new_post", payload: { postId: postId.toString() } });
     res.status(201).send({ id: postId });
 });
 
@@ -113,6 +117,7 @@ app.post("/api/posts/:postId/votes", async (req, res) => {
         value,
     });
 
+    broadcast({ type: "new_vote", payload: { postId, userId } });
     res.status(204).send();
 });
 
@@ -186,6 +191,7 @@ app.post("/api/posts/:postId/comments", async (req, res) => {
         body,
     });
 
+    broadcast({ type: "new_comment", payload: { postId, commentId: commentId.toString() } });
     res.status(201).send({ id: commentId });
 });
 
@@ -193,7 +199,9 @@ async function startServer() {
     await connect();
     await createModelIndexes();
 
-    app.listen(PORT, () => {
+    initWebSocket(server);
+
+    server.listen(PORT, () => {
         console.log(`Running at port: ${PORT}`)
     });
 }

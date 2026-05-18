@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useWebSocket, type WSEvent } from '../hooks/useWebSocket'
 import './PostDetailPage.css'
 
 const USER_STORAGE_KEY = 'mini-forum-user'
@@ -110,6 +111,15 @@ export function PostDetailPage() {
   const [currentUser] = useState<StoredUser | null>(() => getStoredUser())
   const [commentText, setCommentText] = useState('')
   const commentsEndRef = useRef<HTMLDivElement>(null)
+
+  useWebSocket(useCallback((event: WSEvent) => {
+    if (event.type === 'new_comment' && event.payload.postId === postId) {
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] })
+    }
+    if (event.type === 'new_vote' && event.payload.postId === postId) {
+      queryClient.invalidateQueries({ queryKey: ['post', postId] })
+    }
+  }, [queryClient, postId]))
 
   const postQuery = useQuery({
     queryKey: ['post', postId],
