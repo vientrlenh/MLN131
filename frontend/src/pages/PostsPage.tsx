@@ -150,7 +150,7 @@ export function PostsPage() {
     if (!trimmedNickname) {
       return
     }
-
+    
     createUserMutation.mutate(trimmedNickname)
   }
 
@@ -260,7 +260,7 @@ export function PostsPage() {
                 id="nickname"
                 maxLength={32}
                 onChange={(event) => setNickname(event.target.value)}
-                placeholder="e.g. Nguyễn Văn A"
+                placeholder="e.g. abc123"
                 value={nickname}
               />
 

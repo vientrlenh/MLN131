@@ -50,6 +50,10 @@ app.post("/api/users", async (req, res) => {
         res.status(400).send({ message: "Biệt danh không được vượt quá 32 ký tự" });
         return;
     }
+    if (/[^\x00-\x7F]/.test(nickname)) {
+        res.status(400).send( {message: "Biệt danh không được chứa các ký tự unicode" })
+        return;
+    }
     const existingUser = await getUserByNickname(nickname);
     if (existingUser) {
         res.status(400).send({ message: "Nguời dùng với biệt danh này đã tồn tại" });
