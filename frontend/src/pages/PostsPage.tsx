@@ -87,7 +87,7 @@ export function PostsPage() {
     mutationFn: (nextNickname: string) =>
       request<StoredUser>('/api/users', {
         method: 'POST',
-        body: JSON.stringify({ nickname: nextNickname }),
+        body: JSON.stringify({ nickname: nextNickname })
       }),
     onSuccess: (user) => {
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))

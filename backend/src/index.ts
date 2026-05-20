@@ -15,7 +15,8 @@ const server = createServer(app);
 const PORT = Number(process.env.PORT ?? 3000);
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "*";
 
-app.use(cors({ origin: CORS_ORIGIN }));
+app.use(cors());
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -213,7 +214,7 @@ async function startServer() {
 
     initWebSocket(server);
 
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
         console.log(`Running at port: ${PORT}`)
     });
 }
